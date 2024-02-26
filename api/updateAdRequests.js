@@ -139,14 +139,14 @@ module.exports = async (req, res) => {
       });
 
       // Extract the value from the response
-      let cellValue = response.data.values[0][0];
+      const cellValue = response.data.values[0][0] + 1;
       
       await sheets.spreadsheets.values.update({
         spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
         range: rangeToUpdate,   
         valueInputOption: 'RAW',   
         resource: { 
-          values: [[cellValue + 1]], // Increment the value    
+          values: [[cellValue]], // Increment the value    
         },    
      
       });
