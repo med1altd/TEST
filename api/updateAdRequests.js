@@ -146,7 +146,7 @@ module.exports = async (req, res) => {
         range: rangeToUpdate,   
         valueInputOption: 'RAW',   
         resource: { 
-          values: [cellValue + 1], // Increment the value    
+          values: [[cellValue + 1]], // Increment the value    
         },    
      
       });
