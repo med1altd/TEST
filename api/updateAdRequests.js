@@ -168,7 +168,14 @@ module.exports = async (req, res) => {
 
     } else {
 
-      console.log("!!!!!appendedRowIndex !== -1 && typeIndex !== -1!!!!!");
+       await sheets.spreadsheets.values.append({  
+        spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
+        range: `${String.fromCharCode(65 + values[0].length)}${1}`, // Append at the end of the header row
+        valueInputOption: 'RAW',
+        resource: {
+          values: [[type]], // Value for the new column
+        },        
+      });
       
     }
     
