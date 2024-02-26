@@ -57,12 +57,37 @@ module.exports = async (req, res) => {
     }
 
     if (todayIndex !== -1) {
-      // Row is found, get its values
-      rowData = values[todayIndex];
+    // Row is found, get its values
+    let rowData = values[todayIndex];
+
+    // Ensure that rowData has values for all columns
+    const headers = values[0];
+    const columnCount = headers.length;
+    if (rowData.length < columnCount) {
+        // If rowData is missing values for some columns, fill in the missing values with 0
+        const missingValueCount = columnCount - rowData.length;
+        for (let i = 0; i < missingValueCount; i++) {
+            rowData.push('0');
+        }
     }
+    
+    // Create an object with Date and other column values
+    let rowDataObject = {};
+    headers.forEach((header, index) => {
+        rowDataObject[header] = rowData[index];
+    });
 
     // Send the response
-    res.status(200).json({ status: 200, rowData: rowData, mprosta: values });
+    res.status(200).json({ status: 200, rowData: rowDataObject, Date: now });
+} else {
+    // Row not found, return null values for all columns
+    const nullRowDataObject = {};
+    headers.forEach((header) => {
+        nullRowDataObject[header] = '0';
+    });
+    res.status(404).json({ status: 404, rowData: nullRowDataObject, Date: now });
+}
+    
   } catch (error) {
     // If an error occurs during the asynchronous operation, handle it here
     console.error(error);
