@@ -46,7 +46,9 @@ module.exports = async (req, res) => {
     const minutes = String(currentDate.getMinutes()).padStart(2, '0');
     const seconds = String(currentDate.getSeconds()).padStart(2, '0');
     
-    const now = `${year}-${month}-${day}-${hours}`;
+    const now = `${year}-${month}-${day}`;
+
+    const hour = `${hours}:00`;
     
     // Query the Google Sheet to find today's date
     const response = await sheets.spreadsheets.values.get({
@@ -58,13 +60,13 @@ module.exports = async (req, res) => {
     // Find the index of today's date in the Dates column
     let todayIndex = -1;
     if (values) {
-      todayIndex = values.findIndex((row) => row[0] === now);
+      todayIndex = values.findIndex(row => row[0] === now && row[1] === hour);
     }
 
     // If today's date is not found, append a new row
     if (todayIndex === -1) {
 
-      const newRowValues = [[now, 1]]; // Date and Requests columns
+      const newRowValues = [[now, hour, 1]]; // Date and Requests columns
       
       // Append the new row
       const appendResponse = await sheets.spreadsheets.values.append({
