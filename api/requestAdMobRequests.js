@@ -53,7 +53,11 @@ module.exports = async (req, res) => {
     });
     
     const values = response.data.values;
-
+  
+    // Define headers here
+    
+    const headers = values[0];
+    
     // Find the index of today's date in the Dates column
     
     let todayIndex = -1;
@@ -67,7 +71,6 @@ module.exports = async (req, res) => {
     if (todayIndex !== -1) {
     
       // Row is found, get its values
-    
     
       let rowData = values[todayIndex];
 
@@ -111,17 +114,17 @@ module.exports = async (req, res) => {
     } else {
 
       // Row not found, return null values for all columns
-
+  
       const nullRowDataObject = {};
-
+   
       headers.forEach((header) => {
-
+    
         nullRowDataObject[header] = '0';
-
+    
       });
-
+   
       res.status(404).json({ status: 404, result: nullRowDataObject});
-
+      
     }
     
   } catch (error) {
