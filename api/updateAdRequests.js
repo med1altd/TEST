@@ -127,34 +127,26 @@ module.exports = async (req, res) => {
 
     }
 
-    // Find the letter of the column containing the type in the header row
-
-    let typeColumnLetter = '';
-
-    if (typeIndex !== -1) {
-
-      typeColumnLetter = String.fromCharCode(65 + typeIndex); // Convert index to column letter
-
-    }
-
     // Update the value in the column for the specified type
 
     if (appendedRowIndex !== -1 && typeIndex !== -1) {
-
-      console.log("appendedRowIndex !== -1 && typeIndex !== -1");
-
+      
       const rangeToUpdate = `${String.fromCharCode(65 + typeIndex)}${appendedRowIndex}`;
 
-      console.log("gonies: " + rangeToUpdate);
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
+        range: `${String.fromCharCode(65 + typeIndex)}${appendedRowIndex}`,
+      });
 
-      console.log("Range to update:", `${String.fromCharCode(65 + typeIndex)}${appendedRowIndex}`);
+      // Extract the value from the response
+      const cellValue = response.data.values[0][0];
       
       await sheets.spreadsheets.values.update({
         spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
         range: rangeToUpdate,   
         valueInputOption: 'RAW',   
         resource: { 
-          values: [[parseInt(values[appendedRowIndex][typeIndex]) + 1]], // Increment the value    
+          values: [cellValue + 1]], // Increment the value    
         },    
      
       });
