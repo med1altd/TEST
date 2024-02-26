@@ -106,7 +106,7 @@ module.exports = async (req, res) => {
     
       // Send the response
     
-      res.status(200).json({ status: 200, rowData: rowDataObject, Date: now });
+      res.status(200).json({ status: 200, rowData: rowDataObject});
 
 
     } else {
@@ -121,13 +121,17 @@ module.exports = async (req, res) => {
 
       });
 
-      res.status(404).json({ status: 404, rowData: nullRowDataObject, Date: now });
+      res.status(404).json({ status: 404, rowData: nullRowDataObject});
 
     }
     
   } catch (error) {
+    
     // If an error occurs during the asynchronous operation, handle it here
     console.error(error);
+  
     res.status(500).json({ status: 500, message: 'Internal Server Error' });
+
   }
+
 };
