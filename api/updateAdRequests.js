@@ -110,13 +110,9 @@ module.exports = async (req, res) => {
 
     if (values && values[0]) {
 
-      console.log("Value: " + values[0][2]);
-
       for (let i = 0; i < values[0].length; i++) {
 
         if (values[0][i] === type) {
-
-          console.log("Value: " + i + values[0][i]);
 
           typeIndex = i;
 
@@ -140,7 +136,12 @@ module.exports = async (req, res) => {
       });
 
       // Extract the value from the response
-      const cellValue = parseInt(response.data.values[0][0]) + 1;
+      
+      const cellValue = 0;
+      if (response.data.values && response.data.values[0] && response.data.values[0][0] !== null) {
+        // If the value is not null, parse it to an integer and add 1
+        cellValue = parseInt(response.data.values[0][0]) + 1;
+      }
       
       await sheets.spreadsheets.values.update({
         spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
