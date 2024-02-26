@@ -140,7 +140,7 @@ module.exports = async (req, res) => {
       const cellValue = 0;
       if (response.data.values && response.data.values[0] && response.data.values[0][0] !== null) {
         // If the value is not null, parse it to an integer and add 1
-        cellValue = parseInt(response.data.values[0][0]) + 1;
+        cellValue = response.data.values[0][0];
       }
       
       await sheets.spreadsheets.values.update({
@@ -148,7 +148,7 @@ module.exports = async (req, res) => {
         range: rangeToUpdate,   
         valueInputOption: 'RAW',   
         resource: { 
-          values: [[cellValue]], // Increment the value    
+          values: [[parseInt(cellValue) + 1]], // Increment the value    
         },    
      
       });
