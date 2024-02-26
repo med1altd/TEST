@@ -36,7 +36,7 @@ async function getResultByName(name) {
             
         } else {
 
-            return `Name "${name}" not found in JSON data`;
+            return `Name ${name} not found in JSON data`;
                         
         }
         
