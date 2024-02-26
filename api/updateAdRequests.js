@@ -84,7 +84,7 @@ module.exports = async (req, res) => {
       appendedRowIndex = parseInt(lastIndex.match(/\d+/)[0]);
       
     } else {
-      appendedRowIndex = todayIndex;
+      appendedRowIndex = todayIndex + 1;
       // If today's date is found, update the Requests column value
       let currentRequests = 0;
       if (!isNaN(parseInt(values[todayIndex][1]))) {
