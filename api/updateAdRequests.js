@@ -92,7 +92,7 @@ module.exports = async (req, res) => {
       if (!isNaN(parseInt(values[todayIndex][2]))) {
         currentRequests = parseInt(values[todayIndex][2]);
       }
-      const rangeToUpdate = `$B${todayIndex + 1}`; // B column (Requests)
+      const rangeToUpdate = `$C${todayIndex + 1}`; // C column (Requests)
       await sheets.spreadsheets.values.update({
         spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
         range: rangeToUpdate,
