@@ -105,7 +105,7 @@ module.exports = async (req, res) => {
     
       // Send the response
     
-      res.status(200).json({ status: 200, rowData: rowDataObject});
+      res.status(200).json({ status: 200, result: rowDataObject});
 
 
     } else {
@@ -120,7 +120,7 @@ module.exports = async (req, res) => {
 
       });
 
-      res.status(404).json({ status: 404, rowData: nullRowDataObject});
+      res.status(404).json({ status: 404, result: nullRowDataObject});
 
     }
     
