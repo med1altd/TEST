@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
     const minutes = String(currentDate.getMinutes()).padStart(2, '0');
     const seconds = String(currentDate.getSeconds()).padStart(2, '0');
     
-    const now = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    const now = `${year}-${month}-${day}-${hours}`;
     
     // Query the Google Sheet to find today's date
     const response = await sheets.spreadsheets.values.get({
