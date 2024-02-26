@@ -166,7 +166,11 @@ module.exports = async (req, res) => {
      
       });
 
-    } 
+    } else {
+
+      console.log("!!!!!appendedRowIndex !== -1 && typeIndex !== -1!!!!!");
+      
+    }
     
     // Once the asynchronous operation is completed, send the response
     
