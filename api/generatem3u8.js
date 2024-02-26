@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Endpoint to receive MP4 URL and return M3U8 URL
-app.get('/convert', async (req, res) => {
+app.get('/api/generatem3u8', async (req, res) => {
     try {
         const mp4Url = req.query.mp4Url;
 
