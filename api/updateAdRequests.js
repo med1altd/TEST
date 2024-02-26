@@ -84,6 +84,7 @@ module.exports = async (req, res) => {
       appendedRowIndex = parseInt(lastIndex.match(/\d+/)[0]);
       
     } else {
+      appendedRowIndex = todayIndex;
       // If today's date is found, update the Requests column value
       let currentRequests = 0;
       if (!isNaN(parseInt(values[todayIndex][1]))) {
@@ -175,6 +176,17 @@ module.exports = async (req, res) => {
         resource: {
           values: [[type]], // Value for the new column
         },        
+      });
+
+      // Update the value for today in the new column
+  
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
+        range: `${String.fromCharCode(65 + values[0].length)}${appendedRowIndex}`, // Range for today's value in the new column
+        valueInputOption: 'RAW',
+        resource: {
+          values: [[1]], // Increment the value
+        },  
       });
       
     }
