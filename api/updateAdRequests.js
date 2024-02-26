@@ -139,7 +139,7 @@ module.exports = async (req, res) => {
       });
 
       // Extract the value from the response
-      const cellValue = response.data.values[0][0];
+      let cellValue = response.data.values[0][0];
       
       await sheets.spreadsheets.values.update({
         spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
