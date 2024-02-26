@@ -62,7 +62,7 @@ module.exports = async (req, res) => {
     }
 
     // Send the response
-    res.status(200).json({ status: 200, rowData: rowData });
+    res.status(200).json({ status: 200, rowData: rowData, mprosta: values });
   } catch (error) {
     // If an error occurs during the asynchronous operation, handle it here
     console.error(error);
