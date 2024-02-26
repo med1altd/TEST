@@ -14,8 +14,11 @@ async function fetchJsonData(url) {
 // Function to check JSON data based on a name
 async function getResultByName(name) {
     const urls = [
-        'https://g8tu83.github.io/panelladika/main.json', // Your first JSON URL
-        'https://example.com/second.json', // Your second JSON URL
+        'https://g8tu83.github.io/panelladika/main.json', // Your 1st JSON URL
+        'https://g8tu83.github.io/hellastvlive2023/main.json', // 2nd first JSON URL
+        'https://g8tu83.github.io/perifereiaka/main.json', // 3rd first JSON URL
+        'https://g8tu83.github.io/diafora/main.json', // Your 4th JSON URL
+        'https://g8tu83.github.io/happytv/main.json', // Your 5th JSON URL
     ];
 
     try {
