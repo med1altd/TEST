@@ -142,14 +142,6 @@ module.exports = async (req, res) => {
     if (appendedRowIndex !== -1 && typeIndex !== -1) {
 
       console.log("appendedRowIndex !== -1 && typeIndex !== -1");
-      
-      let currentValue = 0;
-
-      if (values[appendedRowIndex] && !isNaN(parseInt(values[appendedRowIndex][typeIndex]))) {
- 
-        currentValue = parseInt(values[appendedRowIndex][typeIndex]);
-    
-      }
 
       const rangeToUpdate = `${String.fromCharCode(65 + typeIndex)}${appendedRowIndex}`;
 
@@ -162,7 +154,7 @@ module.exports = async (req, res) => {
         range: rangeToUpdate,   
         valueInputOption: 'RAW',   
         resource: { 
-          values: [[currentValue + 1]], // Increment the value    
+          values: [[parseInt(values[appendedRowIndex][typeIndex]) + 1]], // Increment the value    
         },    
      
       });
