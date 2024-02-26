@@ -85,6 +85,7 @@ module.exports = async (req, res) => {
       
     } else {
       appendedRowIndex = todayIndex + 1;
+      console.log(appendedRowIndex + " Simadi");
       // If today's date is found, update the Requests column value
       let currentRequests = 0;
       if (!isNaN(parseInt(values[todayIndex][1]))) {
