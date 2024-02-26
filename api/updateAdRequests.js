@@ -125,6 +125,49 @@ module.exports = async (req, res) => {
       }
 
     }
+
+    // Find the letter of the column containing the type in the header row
+
+    let typeColumnLetter = '';
+
+    if (typeIndex !== -1) {
+
+      typeColumnLetter = String.fromCharCode(65 + typeIndex); // Convert index to column letter
+
+    }
+
+    // Update the value in the column for the specified type
+
+    if (appendedRowIndex !== -1 && typeIndex !== -1) {
+
+      console.log("appendedRowIndex !== -1 && typeIndex !== -1");
+      
+      let currentValue = 0;
+
+      if (values[appendedRowIndex] && !isNaN(parseInt(values[appendedRowIndex][typeIndex]))) {
+ 
+        currentValue = parseInt(values[appendedRowIndex][typeIndex]);
+    
+      }
+
+      const rangeToUpdate = `${String.fromCharCode(65 + typeIndex)}${appendedRowIndex}`;
+
+      console.log("gonies: " + rangeToUpdate);
+
+      console.log("Range to update:", `${String.fromCharCode(65 + typeIndex)}${appendedRowIndex}`);
+      
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
+        range: rangeToUpdate,   
+        valueInputOption: 'RAW',   
+        resource: { 
+          values: [[currentValue + 1]], // Increment the value    
+        },    
+     
+      });
+
+    } 
+    
     // Once the asynchronous operation is completed, send the response
     
     res.status(200).end(JSON.stringify({ status: 200, message: 'Value Changed!' }));
