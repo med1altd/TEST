@@ -1,0 +1,17 @@
+# vercel.yaml
+
+# Specify the name of your Vercel project
+name: movieflix
+
+# Configure serverless functions
+functions:
+  # Define the serverless function and its file path
+  updateAdRequests:
+    # Path to the serverless function file
+    handler: api/updateAdRequests.js
+
+# Specify routes, if needed
+# routes:
+#   - src: /api/.*
+#     dest: functions/updateAdRequests.js
+#     methods: [GET, POST]
