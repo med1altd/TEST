@@ -139,7 +139,9 @@ module.exports = async (req, res) => {
     // Update the value in the column for the specified type
 
     if (appendedRowIndex !== -1 && typeIndex !== -1) {
-  
+
+      console.log("appendedRowIndex !== -1 && typeIndex !== -1");
+      
       let currentValue = 0;
 
       if (values[appendedRowIndex] && !isNaN(parseInt(values[appendedRowIndex][typeIndex]))) {
@@ -163,6 +165,8 @@ module.exports = async (req, res) => {
       });
 
     } else {
+
+      console.log("!!!!!appendedRowIndex !== -1 && typeIndex !== -1!!!!!");
       
       await sheets.spreadsheets.values.append({  
         spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
