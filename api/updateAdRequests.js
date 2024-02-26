@@ -114,7 +114,7 @@ module.exports = async (req, res) => {
 
         if (values[0][i] === type) {
 
-          console.log("Value: " + values[0][i]);
+          console.log("Value: " + i + values[0][i]);
 
           typeIndex = i;
 
