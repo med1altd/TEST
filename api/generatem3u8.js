@@ -40,7 +40,7 @@ async function convertToM3U8(mp4Url) {
 
         ffmpeg.on('close', (code) => {
             if (code === 0) {
-                resolve('http://your-server-domain.com/output.m3u8'); // Replace with your server domain
+                resolve('https://test-iota-six-81.vercel.app/output.m3u8'); // Replace with your server domain
             } else {
                 reject('FFmpeg conversion failed');
             }
