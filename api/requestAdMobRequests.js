@@ -27,9 +27,11 @@ const auth = new google.auth.JWT(
 const sheets = google.sheets({ version: 'v4', auth });
 
 module.exports = async (req, res) => {
+  
   let rowData = null; // Define rowData here
 
   try {
+    
     const range = `A:Z`; // Range from A to the last column letter
 
     // Get today's date
@@ -44,49 +46,84 @@ module.exports = async (req, res) => {
     const now = `${year}-${month}-${day}-${hours}`;
     
     // Query the Google Sheet to find today's date
+    
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
       range: range,
     });
+    
     const values = response.data.values;
 
     // Find the index of today's date in the Dates column
+    
     let todayIndex = -1;
+    
     if (values) {
+      
       todayIndex = values.findIndex((row) => row[0] === now);
+    
     }
 
     if (todayIndex !== -1) {
-    // Row is found, get its values
-    let rowData = values[todayIndex];
-
-    // Ensure that rowData has values for all columns
-    const headers = values[0];
-    const columnCount = headers.length;
-    if (rowData.length < columnCount) {
-        // If rowData is missing values for some columns, fill in the missing values with 0
-        const missingValueCount = columnCount - rowData.length;
-        for (let i = 0; i < missingValueCount; i++) {
-            rowData.push('0');
-        }
-    }
     
-    // Create an object with Date and other column values
-    let rowDataObject = {};
-    headers.forEach((header, index) => {
-        rowDataObject[header] = rowData[index];
-    });
+      // Row is found, get its values
+    
+    
+      let rowData = values[todayIndex];
 
-    // Send the response
-    res.status(200).json({ status: 200, rowData: rowDataObject, Date: now });
-} else {
-    // Row not found, return null values for all columns
-    const nullRowDataObject = {};
-    headers.forEach((header) => {
+    
+      // Ensure that rowData has values for all columns
+    
+      const headers = values[0];
+    
+      const columnCount = headers.length;
+    
+      if (rowData.length < columnCount) {
+    
+        // If rowData is missing values for some columns, fill in the missing values with 0
+    
+        const missingValueCount = columnCount - rowData.length;
+    
+        for (let i = 0; i < missingValueCount; i++) {
+    
+          rowData.push('0');
+    
+        }
+    
+      }
+    
+    
+      // Create an object with Date and other column values
+    
+      let rowDataObject = {};
+    
+      headers.forEach((header, index) => {
+    
+        rowDataObject[header] = rowData[index];
+    
+      });
+
+    
+      // Send the response
+    
+      res.status(200).json({ status: 200, rowData: rowDataObject, Date: now });
+
+
+    } else {
+
+      // Row not found, return null values for all columns
+
+      const nullRowDataObject = {};
+
+      headers.forEach((header) => {
+
         nullRowDataObject[header] = '0';
-    });
-    res.status(404).json({ status: 404, rowData: nullRowDataObject, Date: now });
-}
+
+      });
+
+      res.status(404).json({ status: 404, rowData: nullRowDataObject, Date: now });
+
+    }
     
   } catch (error) {
     // If an error occurs during the asynchronous operation, handle it here
