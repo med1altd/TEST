@@ -28,20 +28,10 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 module.exports = async (req, res) => {
   try {
-    // Get today's date and current hour
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    const hours = (currentDate.getHours() + 2) % 24; // Add 2 hours and ensure it's within 0-23 range
-
-    const now = `${year}-${month}-${day}`;
-    const hour = `${String(hours).padStart(2, '0')}:00`;
-
     // Range for fetching data from the current sheet
-    const currentSheetRange = `Current!A:Z`;
+    const currentSheetRange = `Current!A2:G`;
     // Range for fetching data from the "Max" sheet
-    const maxSheetRange = `Max!A:Z`;
+    const maxSheetRange = `Max!A2:G`;
 
     // Fetch data from the current sheet
     const currentResponse = await sheets.spreadsheets.values.get({
@@ -59,43 +49,71 @@ module.exports = async (req, res) => {
 
     const maxValues = maxResponse.data.values;
 
-    // Find column indices for Banner, Interstitial, Rewarded, InterstitialRewarded, AppOpen
-    const headers = currentValues[0];
-    const adTypes = ['Banner', 'Interstitial', 'Rewarded', 'InterstitialRewarded', 'AppOpen'];
-    const adIndices = adTypes.map(adType => headers.indexOf(adType));
+    // Initialize an object to store total max requests for each ad type
+    const totalMaxRequestsBasedOnDate = {
+      Banner: 0,
+      Interstitial: 0,
+      Rewarded: 0,
+      InterstitialRewarded: 0,
+      AppOpen: 0,
+    };
 
-    // Filter current values based on the current hour and date
-    const currentHourValues = currentValues.filter(row => row[0] === now && row[1] === hour);
-
-    // Calculate total requests for each ad type based on the current hour
-    const currentHourTotals = adIndices.map(index => currentHourValues.reduce((acc, row) => acc + parseInt(row[index] || 0), 0));
-
-    // Find the row corresponding to the current hour in the "Max" sheet
-    const maxHourRow = maxValues.find(row => row[0] === hour);
-
-    // Calculate max requests for each ad type based on the current hour
-    const maxHourRequests = adIndices.map(index => parseInt(maxHourRow[index + 1] || 0));
-
-    // Filter current values based on the current date
-    const currentDateValues = currentValues.filter(row => row[0] === now);
-
-    // Calculate total requests for each ad type based on the current date
-    const currentDateTotals = adIndices.map(index => currentDateValues.reduce((acc, row) => acc + parseInt(row[index] || 0), 0));
-
-    // Calculate total max requests for each ad type based on the current date
-    const totalMaxRequestsBasedOnDate = adIndices.map(index => maxValues.reduce((acc, row) => acc + parseInt(row[index + 1] || 0), 0));
+    // Calculate total max requests for each ad type based on date
+    if (maxValues) {
+      maxValues.forEach(row => {
+        // Skip the first row (header)
+        if (row[0] !== 'Hour') {
+          // Sum up the values for each ad type across all hours
+          totalMaxRequestsBasedOnDate.Banner += parseInt(row[1]) || 0;
+          totalMaxRequestsBasedOnDate.Interstitial += parseInt(row[2]) || 0;
+          totalMaxRequestsBasedOnDate.Rewarded += parseInt(row[3]) || 0;
+          totalMaxRequestsBasedOnDate.InterstitialRewarded += parseInt(row[4]) || 0;
+          totalMaxRequestsBasedOnDate.AppOpen += parseInt(row[5]) || 0;
+        }
+      });
+    }
 
     // Construct response object
-    const responseData = adTypes.map((adType, index) => ({
-      Type: adType,
-      CurrentRequestsBasedOnHour: currentHourTotals[index],
-      MaxRequestsBasedOnHour: maxHourRequests[index],
-      TotalRequestsBasedOnDate: currentDateTotals[index],
-      TotalMaxRequestsBasedOnDate: totalMaxRequestsBasedOnDate[index], // Corrected this line
-    }));
+    const response = [
+      {
+        "Type": "Banner",
+        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][2]) || 0 : 0,
+        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][1]) || 0 : 0,
+        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[2]) || 0), 0) : 0,
+        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Banner
+      },
+      {
+        "Type": "Interstitial",
+        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][3]) || 0 : 0,
+        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][2]) || 0 : 0,
+        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[3]) || 0), 0) : 0,
+        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Interstitial
+      },
+      {
+        "Type": "Rewarded",
+        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][4]) || 0 : 0,
+        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][3]) || 0 : 0,
+        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[4]) || 0), 0) : 0,
+        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Rewarded
+      },
+      {
+        "Type": "InterstitialRewarded",
+        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][5]) || 0 : 0,
+        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][4]) || 0 : 0,
+        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[5]) || 0), 0) : 0,
+        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.InterstitialRewarded
+      },
+      {
+        "Type": "AppOpen",
+        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][6]) || 0 : 0,
+        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][5]) || 0 : 0,
+        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[6]) || 0), 0) : 0,
+        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.AppOpen
+      }
+    ];
 
     // Send the response
-    res.status(200).json(responseData);
+    res.status(200).json(response);
   } catch (error) {
     // Handle errors
     console.error('Error:', error);
