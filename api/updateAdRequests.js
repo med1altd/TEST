@@ -78,19 +78,10 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Prepare the response object
-    const responseObject = {
-      Type: type,
-      CurrentRequestsBasedOnHour: currentValues[rowIndex][adIndex],
-      MaxRequestsBasedOnHour: null, // To be implemented
-      TotalRequestsBasedOnDate: null, // To be implemented
-      TotalMaxRequestsBasedOnDate: null // To be implemented
-    };
-
-    // Send the response
-    res.status(200).json(responseObject);
+    // Send the success response
+    res.status(200).json({ status: 'success', message: 'Request count updated successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ status: 'error', message: 'Internal Server Error' });
   }
 };
