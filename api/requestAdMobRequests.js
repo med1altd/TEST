@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
     const hours = parseInt(String(currentDate.getHours()).padStart(2, '0')) + 2;
 
     const now = `${year}-${month}-${day}`;
-    const hour = `${hours}:00`;
+    const hour = String(hours).padStart(2, '0') + ':00';
 
     // Range for fetching data from the current sheet
     const currentSheetRange = `Current!A:Z`;
@@ -59,44 +59,63 @@ module.exports = async (req, res) => {
 
     const maxValues = maxResponse.data.values;
 
-    // Calculate total ad requests and ad requests for the Banner type from the current sheet
-    let totalAdRequests = 0;
-    let bannerAdRequests = 0;
+    // Initialize object to store ad requests for each type
+    let adRequestsByType = {
+      Banner: 0,
+      Interstitial: 0,
+      Rewarded: 0,
+      InterstitialRewarded: 0,
+      AppOpen: 0
+    };
 
+    // Calculate total ad requests and ad requests for each type from the current sheet
     if (currentValues) {
       currentValues.forEach(row => {
         if (row[0] === now && row[1] === hour) {
-          totalAdRequests += parseInt(row[2]); // Assuming ad requests are in the third column
-          bannerAdRequests += parseInt(row[3]); // Assuming ad requests for Banner type are in the fourth column
+          // Assuming ad requests start from index 2 in each row
+          for (let i = 2; i < row.length; i++) {
+            adRequestsByType[Object.keys(adRequestsByType)[i - 2]] += parseInt(row[i]) || 0;
+          }
         }
       });
     }
 
     // Fetch maximum ad requests from the "Max" sheet
-    let maxTotalAdRequests = 0;
-    let maxBannerAdRequests = 0;
+    let maxAdRequestsByType = {
+      Banner: 0,
+      Interstitial: 0,
+      Rewarded: 0,
+      InterstitialRewarded: 0,
+      AppOpen: 0
+    };
 
     if (maxValues) {
       maxValues.forEach(row => {
         if (row[0] === hour) {
-          maxTotalAdRequests = parseInt(row[1]); // Assuming max total ad requests are in the second column
-          maxBannerAdRequests = parseInt(row[3]); // Assuming max ad requests for Banner type are in the fourth column
+          // Assuming max ad requests start from index 2 in each row
+          for (let i = 2; i < row.length; i++) {
+            maxAdRequestsByType[Object.keys(maxAdRequestsByType)[i - 2]] = parseInt(row[i]) || 0;
+          }
         }
       });
     }
 
     // Construct response object
-    const response = {
-      today: now,
-      currentHour: hour,
-      totalAdRequests,
-      bannerAdRequests,
-      maxTotalAdRequests,
-      maxBannerAdRequests
-    };
+    let adRequestsArray = [];
+
+    for (const type in adRequestsByType) {
+      const adRequestObj = {
+        Type: type,
+        CurrentRequestsBasedOnTime: adRequestsByType[type],
+        CurrentRequestsBasedOnDay: 0, // Placeholder for now
+        MaxRequestsBasedOnTime: maxAdRequestsByType[type],
+        MaxRequestsBasedOnDay: 0 // Placeholder for now
+      };
+      adRequestsArray.push(adRequestObj);
+    }
 
     // Send the response
-    res.status(200).json(response);
+    res.status(200).json(adRequestsArray);
   } catch (error) {
     // Handle errors
     console.error('Error:', error);
