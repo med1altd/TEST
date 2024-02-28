@@ -82,7 +82,7 @@ module.exports = async (req, res) => {
     // Calculate total requests for each ad type based on the current date
     const currentDateTotals = adIndices.map(index => currentDateValues.reduce((acc, row) => acc + parseInt(row[index] || 0), 0));
 
-    // Calculate total max requests for each ad type based on every hour of the current date
+    // Calculate total max requests for each ad type based on the current date
     const totalMaxRequestsBasedOnDate = adIndices.map(index => maxValues.reduce((acc, row) => acc + parseInt(row[index + 1] || 0), 0));
 
     // Construct response object
@@ -91,7 +91,7 @@ module.exports = async (req, res) => {
       CurrentRequestsBasedOnHour: currentHourTotals[index],
       MaxRequestsBasedOnHour: maxHourRequests[index],
       TotalRequestsBasedOnDate: currentDateTotals[index],
-      TotalMaxRequestsBasedOnDate: totalMaxRequestsBasedOnDate[index],
+      TotalMaxRequestsBasedOnDate: totalMaxRequestsBasedOnDate[index], // Corrected this line
     }));
 
     // Send the response
