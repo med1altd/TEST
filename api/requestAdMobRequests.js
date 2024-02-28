@@ -27,113 +27,79 @@ const auth = new google.auth.JWT(
 const sheets = google.sheets({ version: 'v4', auth });
 
 module.exports = async (req, res) => {
-  
-  let rowData = null; // Define rowData here
-
   try {
-    
-    const range = `A:Z`; // Range from A to the last column letter
-
-    // Get today's date
+    // Get today's date and current hour
     const currentDate = new Date();
     const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Adding 1 because getMonth() returns zero-based month
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
     const day = String(currentDate.getDate()).padStart(2, '0');
-    const hours = String((currentDate.getHours() + 2) % 24).padStart(2, '0');
+    const hours = String(currentDate.getHours()).padStart(2, '0');
 
     const now = `${year}-${month}-${day}`;
-
     const hour = `${hours}:00`;
-    
-    // Query the Google Sheet to find today's date
-    
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
-      range: range,
+
+    // Range for fetching data from the current sheet
+    const currentSheetRange = `Current!A:Z`;
+    // Range for fetching data from the "Max" sheet
+    const maxSheetRange = `Max!A:Z`;
+
+    // Fetch data from the current sheet
+    const currentResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI', // Specify your spreadsheet ID
+      range: currentSheetRange,
     });
-    
-    const values = response.data.values;
-  
-    // Define headers here
-    
-    const headers = values[0];
-    
-    // Find the index of today's date in the Dates column
-    
-    let todayIndex = -1;
-    
-    if (values) {
-      
-      todayIndex = values.findIndex(row => row[0] === now && row[1] === hour);
-    
-    }
 
-    if (todayIndex !== -1) {
-    
-      // Row is found, get its values
-    
-      let rowData = values[todayIndex];
+    const currentValues = currentResponse.data.values;
 
-      // Ensure that rowData has values for all columns
-    
-      const headers = values[0];
-    
-      const columnCount = headers.length;
-    
-      if (rowData.length < columnCount) {
-    
-        // If rowData is missing values for some columns, fill in the missing values with 0
-    
-        const missingValueCount = columnCount - rowData.length;
-    
-        for (let i = 0; i < missingValueCount; i++) {
-    
-          rowData.push('0');
-    
+    // Fetch data from the "Max" sheet
+    const maxResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI', // Specify your spreadsheet ID
+      range: maxSheetRange,
+    });
+
+    const maxValues = maxResponse.data.values;
+
+    // Calculate total ad requests and ad requests for the Banner type from the current sheet
+    let totalAdRequests = 0;
+    let bannerAdRequests = 0;
+
+    if (currentValues) {
+      currentValues.forEach(row => {
+        if (row[0] === now && row[1] === hour) {
+          totalAdRequests += parseInt(row[2]); // Assuming ad requests are in the third column
+          bannerAdRequests += parseInt(row[3]); // Assuming ad requests for Banner type are in the fourth column
         }
-    
-      }
-    
-    
-      // Create an object with Date and other column values
-    
-      let rowDataObject = {};
-    
-      headers.forEach((header, index) => {
-    
-        rowDataObject[header] = rowData[index];
-    
       });
-
-    
-      // Send the response
-    
-      res.status(200).json({ status: 200, result: rowDataObject});
-
-
-    } else {
-
-      // Row not found, return null values for all columns
-  
-      const nullRowDataObject = {};
-   
-      headers.forEach((header) => {
-    
-        nullRowDataObject[header] = '0';
-    
-      });
-   
-      res.status(404).json({ status: 404, result: nullRowDataObject});
-      
     }
-    
+
+    // Fetch maximum ad requests from the "Max" sheet
+    let maxTotalAdRequests = 0;
+    let maxBannerAdRequests = 0;
+
+    if (maxValues) {
+      maxValues.forEach(row => {
+        if (row[0] === hour) {
+          maxTotalAdRequests = parseInt(row[1]); // Assuming max total ad requests are in the second column
+          maxBannerAdRequests = parseInt(row[3]); // Assuming max ad requests for Banner type are in the fourth column
+        }
+      });
+    }
+
+    // Construct response object
+    const response = {
+      today: now,
+      currentHour: hour,
+      totalAdRequests,
+      bannerAdRequests,
+      maxTotalAdRequests,
+      maxBannerAdRequests
+    };
+
+    // Send the response
+    res.status(200).json(response);
   } catch (error) {
-    
-    // If an error occurs during the asynchronous operation, handle it here
-    console.error(error);
-  
-    res.status(500).json({ status: 500, message: 'Internal Server Error' });
-
+    // Handle errors
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
-
 };
