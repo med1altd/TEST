@@ -33,10 +33,10 @@ module.exports = async (req, res) => {
     const year = currentDate.getFullYear();
     const month = String(currentDate.getMonth() + 1).padStart(2, '0');
     const day = String(currentDate.getDate()).padStart(2, '0');
-    const hours = parseInt(String(currentDate.getHours()).padStart(2, '0')) + 2;
+    const hours = (currentDate.getHours() + 2) % 24; // Add 2 hours and ensure it's within 0-23 range
 
     const now = `${year}-${month}-${day}`;
-    const hour = String(hours).padStart(2, '0') + ':00';
+    const hour = `${String(hours).padStart(2, '0')}:00`;
 
     // Range for fetching data from the current sheet
     const currentSheetRange = `Current!A:Z`;
@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
 
     // Fetch data from the current sheet
     const currentResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI', // Specify your spreadsheet ID
+      spreadsheetId: 'YOUR_SPREADSHEET_ID', // Specify your spreadsheet ID
       range: currentSheetRange,
     });
 
@@ -53,69 +53,49 @@ module.exports = async (req, res) => {
 
     // Fetch data from the "Max" sheet
     const maxResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI', // Specify your spreadsheet ID
+      spreadsheetId: 'YOUR_SPREADSHEET_ID', // Specify your spreadsheet ID
       range: maxSheetRange,
     });
 
     const maxValues = maxResponse.data.values;
 
-    // Initialize object to store ad requests for each type
-    let adRequestsByType = {
-      Banner: 0,
-      Interstitial: 0,
-      Rewarded: 0,
-      InterstitialRewarded: 0,
-      AppOpen: 0
-    };
+    // Find column indices for Banner, Interstitial, Rewarded, InterstitialRewarded, AppOpen
+    const headers = currentValues[0];
+    const adTypes = ['Banner', 'Interstitial', 'Rewarded', 'InterstitialRewarded', 'AppOpen'];
+    const adIndices = adTypes.map(adType => headers.indexOf(adType));
 
-    // Calculate total ad requests and ad requests for each type from the current sheet
-    if (currentValues) {
-      currentValues.forEach(row => {
-        if (row[0] === now && row[1] === hour) {
-          // Assuming ad requests start from index 2 in each row
-          for (let i = 2; i < row.length; i++) {
-            adRequestsByType[Object.keys(adRequestsByType)[i - 2]] += parseInt(row[i]) || 0;
-          }
-        }
-      });
-    }
+    // Filter current values based on the current hour and date
+    const currentHourValues = currentValues.filter(row => row[0] === now && row[1] === hour);
 
-    // Fetch maximum ad requests from the "Max" sheet
-    let maxAdRequestsByType = {
-      Banner: 0,
-      Interstitial: 0,
-      Rewarded: 0,
-      InterstitialRewarded: 0,
-      AppOpen: 0
-    };
+    // Calculate total requests for each ad type based on the current hour
+    const currentHourTotals = adIndices.map(index => currentHourValues.reduce((acc, row) => acc + parseInt(row[index] || 0), 0));
 
-    if (maxValues) {
-      maxValues.forEach(row => {
-        if (row[0] === hour) {
-          // Assuming max ad requests start from index 2 in each row
-          for (let i = 2; i < row.length; i++) {
-            maxAdRequestsByType[Object.keys(maxAdRequestsByType)[i - 2]] = parseInt(row[i]) || 0;
-          }
-        }
-      });
-    }
+    // Find the row corresponding to the current hour in the "Max" sheet
+    const maxHourRow = maxValues.find(row => row[0] === hour);
+
+    // Calculate max requests for each ad type based on the current hour
+    const maxHourRequests = adIndices.map(index => parseInt(maxHourRow[index + 1] || 0));
+
+    // Filter current values based on the current date
+    const currentDateValues = currentValues.filter(row => row[0] === now);
+
+    // Calculate total requests for each ad type based on the current date
+    const currentDateTotals = adIndices.map(index => currentDateValues.reduce((acc, row) => acc + parseInt(row[index] || 0), 0));
+
+    // Calculate total max requests for each ad type based on the current date
+    const maxDateTotals = adIndices.map(index => maxValues.reduce((acc, row) => acc + parseInt(row[index + 1] || 0), 0));
 
     // Construct response object
-    let adRequestsArray = [];
-
-    for (const type in adRequestsByType) {
-      const adRequestObj = {
-        Type: type,
-        CurrentRequestsBasedOnTime: adRequestsByType[type],
-        CurrentRequestsBasedOnDay: 0, // Placeholder for now
-        MaxRequestsBasedOnTime: maxAdRequestsByType[type],
-        MaxRequestsBasedOnDay: 0 // Placeholder for now
-      };
-      adRequestsArray.push(adRequestObj);
-    }
+    const responseData = adTypes.map((adType, index) => ({
+      Type: adType,
+      CurrentRequestsBasedOnHour: currentHourTotals[index],
+      MaxRequestsBasedOnHour: maxHourRequests[index],
+      TotalRequestsBasedOnDate: currentDateTotals[index],
+      TotalMaxRequestsBasedOnDate: maxDateTotals[index],
+    }));
 
     // Send the response
-    res.status(200).json(adRequestsArray);
+    res.status(200).json(responseData);
   } catch (error) {
     // Handle errors
     console.error('Error:', error);
