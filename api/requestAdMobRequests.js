@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
     const year = currentDate.getFullYear();
     const month = String(currentDate.getMonth() + 1).padStart(2, '0');
     const day = String(currentDate.getDate()).padStart(2, '0');
-    const hours = String(currentDate.getHours()).padStart(2, '0');
+    const hours = parseInt(String(currentDate.getHours()).padStart(2, '0')) + 2;
 
     const now = `${year}-${month}-${day}`;
     const hour = `${hours}:00`;
