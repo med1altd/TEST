@@ -28,7 +28,6 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 module.exports = async (req, res) => {
   try {
-    
     const range = `A:Z`; // Range from A to the last column letter
     const now = new Date().toISOString().split('T')[0]; // Today's date
 
@@ -39,6 +38,11 @@ module.exports = async (req, res) => {
     });
 
     const values = response.data.values;
+
+    // Ensure values array is not undefined or empty
+    if (!values || !values.length) {
+      throw new Error('No data found in the Google Sheet');
+    }
 
     // Find today's row index or append a new row if not found
     let todayIndex = values.findIndex(row => row[0] === now);
