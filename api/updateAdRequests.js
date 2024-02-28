@@ -28,67 +28,69 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 module.exports = async (req, res) => {
   try {
-    const range = `A:Z`; // Range from A to the last column letter
-    const now = new Date().toISOString().split('T')[0]; // Today's date
-
-    // Fetch values from the Google Sheet
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
-      range: range,
-    });
-
-    const values = response.data.values;
-
-    // Ensure values array is not undefined or empty
-    if (!values || !values.length) {
-      throw new Error('No data found in the Google Sheet');
-    }
-
-    // Find today's row index or append a new row if not found
-    let todayIndex = values.findIndex(row => row[0] === now);
-    if (todayIndex === -1) {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
-        range: range,
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[now, ...Array(values[0].length - 1).fill(0)]], // Fill with 0 for other columns
-        },
-      });
-      todayIndex = values.length; // Set today's index to the newly appended row
-    }
-
-    // Get the type from the query parameter
+    // Get the ad type from the query parameter
     const type = req.query.Type;
 
-    // Find the index of the type column or append a new column if not found
-    let typeIndex = values[0].indexOf(type);
-    if (typeIndex === -1) {
-      await sheets.spreadsheets.values.append({
-        spreadsheetId: 'YOUR_SPREADSHEET_ID',
-        range: `${String.fromCharCode(65 + values[0].length)}${1}`, // Append at the end of the header row
-        valueInputOption: 'RAW',
-        resource: {
-          values: [[type]], // Value for the new column
-        },
-      });
-      typeIndex = values[0].length; // Set the type index to the newly appended column
-    }
+    // Get current date and hour
+    const currentDate = new Date();
+    const [year, month, day] = [
+      currentDate.getFullYear(),
+      String(currentDate.getMonth() + 1).padStart(2, '0'),
+      String(currentDate.getDate()).padStart(2, '0')
+    ];
+    const [hours, minutes, seconds] = [
+      String((currentDate.getHours() + 2) % 24).padStart(2, '0'),
+      String(currentDate.getMinutes()).padStart(2, '0'),
+      String(currentDate.getSeconds()).padStart(2, '0')
+    ];
+    const now = `${year}-${month}-${day}`;
+    const hour = `${hours}:00`;
 
-    // Update today's value for the type
-    const currentValue = parseInt(values[todayIndex][typeIndex]) || 0;
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: 'YOUR_SPREADSHEET_ID',
-      range: `${String.fromCharCode(65 + typeIndex)}${todayIndex + 1}`, // Range for today's value in the type column
-      valueInputOption: 'RAW',
-      resource: {
-        values: [[currentValue + 1]], // Increment the value
-      },
+    // Retrieve values from the "Current" sheet
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
+      range: 'Current'
     });
 
-    res.status(200).json({ status: 200, message: 'Value Changed!' });
+    const currentValues = response.data.values || [];
+
+    // Find or append the row for the current date and hour in the "Current" sheet
+    let rowIndex = currentValues.findIndex(row => row[0] === now && row[1] === hour);
+    if (rowIndex === -1) {
+      rowIndex = currentValues.push([now, hour, 0, 0, 0, 0, 0]) - 1;
+    }
+
+    // Find the index of the ad type column
+    const adIndex = currentValues[0].indexOf(type);
+
+    // Update the request count for the specified ad type
+    if (adIndex !== -1) {
+      currentValues[rowIndex][adIndex]++;
+
+      // Update the values in the "Current" sheet
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
+        range: `Current!A${rowIndex + 1}`,
+        valueInputOption: 'RAW',
+        resource: {
+          values: [currentValues[rowIndex]]
+        }
+      });
+    }
+
+    // Prepare the response object
+    const responseObject = {
+      Type: type,
+      CurrentRequestsBasedOnHour: currentValues[rowIndex][adIndex],
+      MaxRequestsBasedOnHour: null, // To be implemented
+      TotalRequestsBasedOnDate: null, // To be implemented
+      TotalMaxRequestsBasedOnDate: null // To be implemented
+    };
+
+    // Send the response
+    res.status(200).json(responseObject);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
