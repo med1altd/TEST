@@ -28,6 +28,7 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 module.exports = async (req, res) => {
   try {
+    
     const range = `A:Z`; // Range from A to the last column letter
     const now = new Date().toISOString().split('T')[0]; // Today's date
 
