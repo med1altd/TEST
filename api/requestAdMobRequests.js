@@ -79,35 +79,35 @@ module.exports = async (req, res) => {
         "Type": "Banner",
         "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][2]) || 0 : 0,
         "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][1]) || 0 : 0,
-        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[2]) || 0), 0) : 0,
+        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[2]) || 0), 0) : 0,
         "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Banner
       },
       {
         "Type": "Interstitial",
         "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][3]) || 0 : 0,
         "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][2]) || 0 : 0,
-        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[3]) || 0), 0) : 0,
+        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[3]) || 0), 0) : 0,
         "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Interstitial
       },
       {
         "Type": "Rewarded",
         "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][4]) || 0 : 0,
         "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][3]) || 0 : 0,
-        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[4]) || 0), 0) : 0,
+        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[4]) || 0), 0) : 0,
         "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Rewarded
       },
       {
         "Type": "InterstitialRewarded",
         "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][5]) || 0 : 0,
         "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][4]) || 0 : 0,
-        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[5]) || 0), 0) : 0,
+        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[5]) || 0), 0) : 0,
         "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.InterstitialRewarded
       },
       {
         "Type": "AppOpen",
         "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][6]) || 0 : 0,
         "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][5]) || 0 : 0,
-        "TotalRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[6]) || 0), 0) : 0,
+        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[6]) || 0), 0) : 0,
         "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.AppOpen
       }
     ];
