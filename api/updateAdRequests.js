@@ -1,4 +1,5 @@
 const { google } = require('googleapis');
+const moment = require('moment-timezone');
 
 // Google Sheets API credentials
 const credentials = {
@@ -28,28 +29,36 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 module.exports = async (req, res) => {
   try {
+    
     // Get the ad type from the query parameter
     const type = req.query.Type;
 
-    // Get current date and hour
-    const currentDate = new Date();
-    const [year, month, day] = [
-      currentDate.getFullYear(),
-      String(currentDate.getMonth() + 1).padStart(2, '0'),
-      String(currentDate.getDate()).padStart(2, '0')
-    ];
-    const [hours, minutes, seconds] = [
-      String((currentDate.getHours() + 2) % 24).padStart(2, '0'),
-      String(currentDate.getMinutes()).padStart(2, '0'),
-      String(currentDate.getSeconds()).padStart(2, '0')
-    ];
-    const now = `${year}-${month}-${day}`;
-    const hour = `${hours}:00`;
+    // Fetch current date and time from the World Time API for Athens
+    const responseDate = await fetch('https://worldtimeapi.org/api/timezone/Europe/Athens');
+    const data = await responseDate.json();
+
+    // Extract time, month, day, and year from the datetime field
+    const currentDateTime = moment.tz(data.datetime, 'Europe/Athens');
+
+    // Get the formatted date (DD/MM/YYYY)
+    const now = currentDateTime.format('YYYY-MM-DD');
+
+    // Get the formatted time (HH:00)
+    const hour = currentDateTime.format('HH:00');
+    
+    //const currentDate = new Date();
+    //const year = currentDate.getFullYear();
+    //const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    //const day = String(currentDate.getDate()).padStart(2, '0');
+    //const now = `${year}-${month}-${day}`;
+
+    //const hours = String((currentDate.getHours() + 2) % 24).padStart(2, '0');
+    //const hour = `${hours}:00`;
 
     // Retrieve values from the "Current" sheet
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
-      range: 'Current'
+      range: 'CurrentRequests'
     });
 
     const currentValues = response.data.values || [];
@@ -70,7 +79,7 @@ module.exports = async (req, res) => {
       // Update the values in the "Current" sheet
       await sheets.spreadsheets.values.update({
         spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
-        range: `Current!A${rowIndex + 1}`,
+        range: `CurrentRequests!A${rowIndex + 1}`,
         valueInputOption: 'RAW',
         resource: {
           values: [currentValues[rowIndex]]
