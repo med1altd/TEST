@@ -1,4 +1,5 @@
 const { google } = require('googleapis');
+const moment = require('moment-timezone');
 
 // Google Sheets API credentials
 const credentials = {
@@ -28,14 +29,37 @@ const sheets = google.sheets({ version: 'v4', auth });
 
 module.exports = async (req, res) => {
   try {
-    // Range for fetching data from the current sheet
-    const currentSheetRange = `Current!A2:G`;
-    // Range for fetching data from the "Max" sheet
-    const maxSheetRange = `Max!A2:G`;
 
-    // Fetch data from the current sheet
+    // Fetch current date and time from the World Time API for Athens
+    const responseDate = await fetch('https://worldtimeapi.org/api/timezone/Europe/Athens');
+    const data = await responseDate.json();
+
+    // Extract time, month, day, and year from the datetime field
+    const currentDateTime = moment.tz(data.datetime, 'Europe/Athens');
+
+    // Get the formatted date (DD/MM/YYYY)
+    const now = currentDateTime.format('YYYY-MM-DD');
+
+    // Get the formatted time (HH:00)
+    const hour = currentDateTime.format('HH:00');
+    
+    //const currentDate = new Date();
+    //const year = currentDate.getFullYear();
+    //const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    //const day = String(currentDate.getDate()).padStart(2, '0');
+    //const now = `${year}-${month}-${day}`;
+
+    //const hours = String((currentDate.getHours() + 2) % 24).padStart(2, '0');
+    //const hour = `${hours}:00`;
+
+    // Range for fetching data from the "Current" sheet
+    const currentSheetRange = `CurrentRequests!A:G`;
+    // Range for fetching data from the "Max" sheet
+    const maxSheetRange = `MaxRequests!A1:G26`;
+
+    // Fetch data from the "Current" sheet
     const currentResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI', // Specify your spreadsheet ID
+      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
       range: currentSheetRange,
     });
 
@@ -43,80 +67,158 @@ module.exports = async (req, res) => {
 
     // Fetch data from the "Max" sheet
     const maxResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI', // Specify your spreadsheet ID
+      spreadsheetId: '12hGUObElwnEKCy616HvBtWfysf_j6o74QemUnZwihPI',
       range: maxSheetRange,
     });
 
     const maxValues = maxResponse.data.values;
 
-    // Initialize an object to store total max requests for each ad type
-    const totalMaxRequestsBasedOnDate = {
+    // Initialize objects to store current total ad requests for each ad type with default value 0
+    let currentTypeAdRequestsDaily = {
       Banner: 0,
       Interstitial: 0,
       Rewarded: 0,
-      InterstitialRewarded: 0,
+      RewardedInterstitial: 0,
       AppOpen: 0,
     };
 
-    // Calculate total max requests for each ad type based on date
-    if (maxValues) {
-      maxValues.forEach(row => {
-        // Skip the first row (header)
-        if (row[0] !== 'Hour') {
-          // Sum up the values for each ad type across all hours
-          totalMaxRequestsBasedOnDate.Banner += parseInt(row[1]) || 0;
-          totalMaxRequestsBasedOnDate.Interstitial += parseInt(row[2]) || 0;
-          totalMaxRequestsBasedOnDate.Rewarded += parseInt(row[3]) || 0;
-          totalMaxRequestsBasedOnDate.InterstitialRewarded += parseInt(row[4]) || 0;
-          totalMaxRequestsBasedOnDate.AppOpen += parseInt(row[5]) || 0;
+    let currentTypeAdRequestsHourly = {
+      Banner: 0,
+      Interstitial: 0,
+      Rewarded: 0,
+      RewardedInterstitial: 0,
+      AppOpen: 0,
+    };
+
+    let currentTotalAdRequestsDaily = 0;
+    let currentTotalAdRequestsHourly = 0;
+
+    // Initialize objects to store max total ad requests for each ad type with default value 0
+    let maxTypeAdRequestsDaily = {
+      Banner: 0,
+      Interstitial: 0,
+      Rewarded: 0,
+      RewardedInterstitial: 0,
+      AppOpen: 0,
+    };
+
+    let maxTypeAdRequestsHourly = {
+      Banner: 0,
+      Interstitial: 0,
+      Rewarded: 0,
+      RewardedInterstitial: 0,
+      AppOpen: 0,
+    };
+
+    let maxTotalAdRequestsDaily = 0;
+    let maxTotalAdRequestsHourly = 0;
+
+    // Iterate over the rows to find and calculate current total ad requests
+    if (currentValues) {
+      for (let i = 1; i < currentValues.length; i++) {
+        const row = currentValues[i];
+        if (row[0] === now) {
+          currentTypeAdRequestsDaily.Banner += parseInt(row[2]) || 0;
+          currentTypeAdRequestsDaily.Interstitial += parseInt(row[3]) || 0;
+          currentTypeAdRequestsDaily.Rewarded += parseInt(row[4]) || 0;
+          currentTypeAdRequestsDaily.RewardedInterstitial += parseInt(row[5]) || 0;
+          currentTypeAdRequestsDaily.AppOpen += parseInt(row[6]) || 0;
+          currentTotalAdRequestsDaily += (parseInt(row[2]) || 0) + (parseInt(row[3]) || 0) + (parseInt(row[4]) || 0) + (parseInt(row[5]) || 0) + (parseInt(row[6]) || 0);
+
+          if (row[1] === hour) {
+            currentTypeAdRequestsHourly.Banner += parseInt(row[2]) || 0;
+            currentTypeAdRequestsHourly.Interstitial += parseInt(row[3]) || 0;
+            currentTypeAdRequestsHourly.Rewarded += parseInt(row[4]) || 0;
+            currentTypeAdRequestsHourly.RewardedInterstitial += parseInt(row[5]) || 0;
+            currentTypeAdRequestsHourly.AppOpen += parseInt(row[6]) || 0;
+            currentTotalAdRequestsHourly += (parseInt(row[2]) || 0) + (parseInt(row[3]) || 0) + (parseInt(row[4]) || 0) + (parseInt(row[5]) || 0) + (parseInt(row[6]) || 0);
+          }
         }
-      });
+      }
     }
 
-    // Construct response object
-    const response = [
-      {
-        "Type": "Banner",
-        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][2]) || 0 : 0,
-        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][1]) || 0 : 0,
-        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[2]) || 0), 0) : 0,
-        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Banner
-      },
-      {
-        "Type": "Interstitial",
-        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][3]) || 0 : 0,
-        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][2]) || 0 : 0,
-        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[3]) || 0), 0) : 0,
-        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Interstitial
-      },
-      {
-        "Type": "Rewarded",
-        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][4]) || 0 : 0,
-        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][3]) || 0 : 0,
-        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[4]) || 0), 0) : 0,
-        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.Rewarded
-      },
-      {
-        "Type": "InterstitialRewarded",
-        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][5]) || 0 : 0,
-        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][4]) || 0 : 0,
-        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[5]) || 0), 0) : 0,
-        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.InterstitialRewarded
-      },
-      {
-        "Type": "AppOpen",
-        "CurrentRequestsBasedOnHour": currentValues ? parseInt(currentValues[0][6]) || 0 : 0,
-        "MaxRequestsBasedOnHour": maxValues ? parseInt(maxValues[6][5]) || 0 : 0,
-        "TotalCurrentRequestsBasedOnDate": currentValues ? currentValues.reduce((acc, row) => acc + (parseInt(row[6]) || 0), 0) : 0,
-        "TotalMaxRequestsBasedOnDate": totalMaxRequestsBasedOnDate.AppOpen
+    // Iterate over the rows to find and calculate max total ad requests
+    if (maxValues) {
+
+      for (let i = 1; i < maxValues.length; i++) {
+
+        const row = maxValues[i];
+        
+        // Assuming the first column contains the hour value
+        if (row[0] === hour) {
+          maxTypeAdRequestsHourly.Banner = parseInt(row[1]) || 0;
+          maxTypeAdRequestsHourly.Interstitial = parseInt(row[2]) || 0;
+          maxTypeAdRequestsHourly.Rewarded = parseInt(row[3]) || 0;
+          maxTypeAdRequestsHourly.RewardedInterstitial = parseInt(row[4]) || 0;
+          maxTypeAdRequestsHourly.AppOpen = parseInt(row[5]) || 0;
+          maxTotalAdRequestsHourly = parseInt(row[1]) + parseInt(row[2]) + parseInt(row[3]) + parseInt(row[4]) + parseInt(row[5]);
+        }
+
       }
-    ];
+
+      if (maxValues && maxValues.length > 25 && maxValues[25]) {
+        maxTypeAdRequestsDaily.Banner = parseInt(maxValues[25][1]) || 0;
+        maxTypeAdRequestsDaily.Interstitial = parseInt(maxValues[25][2]) || 0;
+        maxTypeAdRequestsDaily.Rewarded = parseInt(maxValues[25][3]) || 0;
+        maxTypeAdRequestsDaily.RewardedInterstitial = parseInt(maxValues[25][4]) || 0;
+        maxTypeAdRequestsDaily.AppOpen = parseInt(maxValues[25][5]) || 0;
+        maxTotalAdRequestsDaily = parseInt(maxValues[25][6]) || 0;
+      } else {
+        // If maxValues[25] is undefined, set all values to 0
+        maxTypeAdRequestsDaily.Banner = 0;
+        maxTypeAdRequestsDaily.Interstitial = 0;
+        maxTypeAdRequestsDaily.Rewarded = 0;
+        maxTypeAdRequestsDaily.RewardedInterstitial = 0;
+        maxTypeAdRequestsDaily.AppOpen = 0;
+        maxTotalAdRequestsDaily = 0;
+      }
+
+    }
+
+    if (currentTotalAdRequestsDaily === null) {
+
+      currentTotalAdRequestsDaily = 0;
+
+    }
+
+    if (currentTotalAdRequestsHourly === null) {
+
+      currentTotalAdRequestsHourly = 0;
+
+    }
+
+    if (maxTotalAdRequestsDaily === null) {
+
+      maxTotalAdRequestsDaily = 1000000;
+
+    }
+
+    if (maxTotalAdRequestsHourly === null) {
+
+      maxTotalAdRequestsHourly = 1000000;
+
+    }
+
+    // Combine current and max total ad requests into a single response object
+    const response = {
+      currentTypeAdRequestsDaily,  
+      currentTypeAdRequestsHourly,  
+      currentTotalAdRequestsDaily,  
+      currentTotalAdRequestsHourly,  
+      maxTypeAdRequestsDaily,  
+      maxTypeAdRequestsHourly,  
+      maxTotalAdRequestsDaily,
+      maxTotalAdRequestsHourly
+    };
 
     // Send the response
     res.status(200).json(response);
-  } catch (error) {
+    
+  } catch (error) {  
     // Handle errors
     console.error('Error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  
   }
+  
 };
